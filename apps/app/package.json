@@ -1,7 +1,7 @@
 {
   "name": "app",
   "version": "1.0.0",
-  "main": "index.ts",
+  "main":  "api.ts",
   "scripts": {
     "start": "expo start",
     "android": "expo start --android",
@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "expo": "~55.0.8",
+    "expo-dev-client": "~55.0.18",
     "expo-status-bar": "~55.0.4",
     "react": "19.2.0",
     "react-dom": "19.2.0",
