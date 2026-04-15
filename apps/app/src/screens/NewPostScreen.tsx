@@ -1,13 +1,47 @@
 import { View, Text, TextInput, StyleSheet, Button, TouchableOpacity} from 'react-native';
 import { useState } from 'react';
+import { createPost, updatePost } from '../api/client';
 
-export default function NewPostScreen({route}) {
+
+
+export default function NewPostScreen({route,navigation}) {
   const post = route.params?.post;
 
-  const [title, setTitle] = useState(post?.content || '');
+  const [title, setTitle] = useState(post?.title || '');
   const [author, setAuthor] = useState(post?.author || '');
-  const [body, setBody] = useState(post?.body || '');
+  const [text, setText] = useState(post?.text || '');
   const [tags, setTags] = useState(post?.tags || '');
+
+
+  const handleSubmit = async () =>{
+  const data = {
+    title,
+    author,
+    text,
+    tags,
+  };
+  try {
+      if (post){
+        await updatePost(post.id, data);
+        console.log("Post Updated");
+        //go back to home
+         navigation.reset({
+            index: 0,
+            routes: [{ name: "Posts" }],
+         })
+
+      } else {
+        await createPost(data);
+        console.log("Post Created")
+        navigation.goBack();
+      }
+      
+    }
+    catch (error){
+      console.error("Error: ", error)
+    }
+  
+} 
 
   return (
     <View style={styles.container}>
@@ -17,18 +51,18 @@ export default function NewPostScreen({route}) {
       <Text style={styles.label}>Author</Text>
       <TextInput style={styles.input} value={author} onChangeText={setAuthor} />
 
-      <Text style={styles.label}>Body</Text>
+      <Text style={styles.label}>Text</Text>
       <TextInput 
         style={[styles.input, { height: 100 }]} 
-        value={body} 
-        onChangeText={setBody} 
+        value={text} 
+        onChangeText={setText} 
         multiline 
       />
 
       <Text style={styles.label}>Tags</Text>
       <TextInput style={styles.input} value={tags} onChangeText={setTags} />
 
-    <TouchableOpacity style={styles.button} onPress={() => console.log(post ? "Post Updated" : "Post Created")}>
+    <TouchableOpacity style={styles.button} onPress={handleSubmit}>
         <Text style={styles.buttonText}>{post ? "Update Post" : "Create Post"}</Text>
     </TouchableOpacity>
       

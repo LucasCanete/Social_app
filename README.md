@@ -17,13 +17,13 @@ Example of a small social network app using React Native.
 # Getting started
 ## Web App
 Run the following command in the root directory:
-
+This will start the REST API present in the api directory
 ```
 npx turbo run dev
 ```
 
 ## Mobile App
-Run inside the apps/app/:
+Run inside the apps/app/ to start the frontend (web or emulator):
 
 For emulator configuration (path where the sdk is located):
 ```
@@ -34,9 +34,13 @@ Additionally you can run these commands to optimize if you are using linux:
 export ELECTRON_DISABLE_SANDBOX=1
 export CHROME_DEVEL_SANDBOX=0
 ```
-Finallz run the project with:
+Finally run the project with:
 ```
 npx expo start
+```
+In case node -v returns version 14 change to version 20 with:
+```
+nvm use 20
 ```
 To open the android emulator onces the project is running press a
 # Project Status

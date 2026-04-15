@@ -1,4 +1,6 @@
 import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
+import { deletePost } from '../api/client';
+
 
 export default function PostDetailScreen({ navigation, route }) {
   const { post } = route.params;
@@ -15,31 +17,40 @@ export default function PostDetailScreen({ navigation, route }) {
             text: "Delete",
             style: "destructive",
             onPress: () => {
-            
+                deletePost(post.id);
                 console.log("Post deleted");
                 navigation.goBack();
             },
         },
         ]
-    );
-    };
+    );};
+
+    //ISO DATE to dd/mm/yyyy
+    const formatDate = (dateString) => {
+        const date = new Date(dateString);
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const year = date.getFullYear();
+
+        return `${day}/${month}/${year}`;
+        };
 
   return (
     <View style={styles.container}>
       
       {/* Title */}
-      <Text style={styles.title}>{post.content}</Text>
+      <Text style={styles.title}>{post.title}</Text>
 
       {/* Meta */}
       <Text style={styles.meta}>
-        {post.author} · {post.date}
+        {post.author} · {formatDate(post.date)}
       </Text>
 
       {/* Tags */}
       <Text style={styles.tags}>Tags: {post.tags || 'None'}</Text>
 
-      {/* Body */}
-      <Text style={styles.body}>{post.body || 'No content'}</Text>
+      {/* text */}
+      <Text style={styles.body}>{post.text || 'No content'}</Text>
 
       {/* Buttons */}
       <View style={styles.buttonContainer}>
