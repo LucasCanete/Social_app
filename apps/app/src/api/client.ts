@@ -1,7 +1,8 @@
 
 
-const BASE_URL = "http://192.168.178.23:3000";
-
+const BASE_URL = "http://192.168.178.23:3000"; //Home
+//const BASE_URL = "http://172.22.118.150:3000"; //Uni
+//const BASE_URL = "http://192.168.0.5:3000"; // Caro
 //GET POSTS
 export const getPosts = async () => {
     const res = await fetch(`${BASE_URL}/posts`);

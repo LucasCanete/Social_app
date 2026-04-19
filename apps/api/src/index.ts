@@ -1,6 +1,10 @@
 import express, { Request, Response } from 'express';
 import cors from 'cors';
 
+import { prisma } from 'db';
+
+//const prisma = new PrismaClient();
+
 const app = express();
 const PORT = 3000;
 app.use(cors());
@@ -19,25 +23,37 @@ let posts = [
 //REST METHODS
 
 //GET 200, obtain posts
-app.get('/posts', (req, res) =>{
+app.get('/posts', async (req, res) =>{
+  const posts = await prisma.post.findMany();
   return res.json(posts);
 });
 
 //GET 200 | 404 get specific post
-app.get('/posts/:id', (req, res)=>{
+app.get('/posts/:id', async (req, res)=>{
   //searched id
-  const id  = req.params.id;
+  try{
+    let id_str = req.params.id;
+    let id = Number(id_str); //from str -> int
 
-  const post = posts.find(p => p.id === id)
 
-  //in case id not found
-  if(!post) return res.status(404).json({message:'Post not found'})
+    const post = await prisma.post.findUnique({where:{id:id}})
+
+    //in case id not found
+    if(!post) return res.status(404).json({message:'Post not found'})
+    
+    return res.json(post)
+
+  }
+  catch(error){
+    console.error(error);
+    return res.status(500).json({ message: 'Internal server error' });
+
+  }
   
-  return res.json(post)
 });
 
 //POST 201 create a new post
-app.post('/posts', (req, res)=>{
+app.post('/posts', async (req, res)=>{
   //req.body is the whole post
   const title = req.body.title;
   const author = req.body.author;
@@ -45,48 +61,83 @@ app.post('/posts', (req, res)=>{
   const text = req.body.text;
   const tags = req.body.tags
 
-  //find maximum id and add 1 
-  const maxId = Math.max(...posts.map(p => Number(p.id)));
-  const newId = (maxId + 1).toString();
+  try{
+    const newPost = await prisma.post.create({
+      data: {
+        title,
+        author,
+        text,
+        tags,
+        date
+      },
+      
+    });
 
-  const newPost = {
-    id:newId,
-    title,
-    author,
-    date,
-    text,
-    tags
-  };
+    return res.status(201).json(newPost);
+  }
+  catch(error){
+    console.error(error);
+    return res.status(500).json({ message: 'Error creating post' });
+  }
 
-  posts.push(newPost);
+  
 
-  return res.status(201).json(newPost);
+  
 
 });
 
 //PATCH 200, edit something from the post
-app.patch('/posts/:id', (req, res)=>{
-  const id = req.params.id;
-  const post = posts.find(p => p.id === id);
-  if(!post) return res.status(404).json({message:'Post not found'})
-  
-  //assings req.body to the existing post, updating the fields
-  Object.assign(post, req.body);
+app.patch('/posts/:id', async(req, res)=>{
 
-  return res.json(post);
+  try { 
+    let id_str = req.params.id;
+    let id = Number(id_str); //from str -> int
+
+    const date =  new Date().toISOString();
+
+    const updatedPost = await prisma.post.update({
+      where: { id: id },
+      data: { 
+        title : req.body.title,
+        author: req.body.author,
+        text: req.body.text,
+        tags:req.body.tags,
+        date: date
+
+      },
+    });
+
+
+    return res.status(200).json(updatedPost);
+
+  }
+  catch(error){
+    // if (error.code === 'P2025') {
+    //   return res.status(404).json({ message: 'Post not found' });
+    // }
+
+    console.error(error);
+    return res.status(500).json({ message: 'Error updating post' });
+  }
 
 });
 
 //DELETE 204
-app.delete('/posts/:id',(req, res)=>{
-  const id = req.params.id;
-  const exists = posts.some(p => p.id === id);
-  if(!exists) return res.status(404).json({message:'Post not found'})
+app.delete('/posts/:id',async(req, res)=>{
+  try{
+    let id_str = req.params.id;
+    let id = Number(id_str); //from str -> int
+    const post = await prisma.post.delete({
+      where: { id: Number(req.params.id) },
+    });
 
-  posts = posts.filter(p => p.id != id);
-  
+    return res.status(204).send();
 
-  return res.status(204).send();
+  }
+  catch(error){
+    console.log(error);
+    return res.status(500).json({ message: 'Error deleting post' });
+  }
 
 });
 
