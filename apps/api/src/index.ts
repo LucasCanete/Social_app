@@ -2,6 +2,14 @@ import express, { Request, Response } from 'express';
 import cors from 'cors';
 
 import { prisma } from 'db';
+import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
+import { authMiddleware} from './middleware';
+import dotenv from "dotenv";
+
+dotenv.config();
+
+const SECRET = process.env.JWT_SECRET!;
 
 //const prisma = new PrismaClient();
 
@@ -10,21 +18,124 @@ const PORT = 3000;
 app.use(cors());
 app.use(express.json()); // Middleware to parse JSON request bodies
 
-//mock up database
-let posts = [
-        { id: '1', title: 'Essen heute Abend', author: "Lucas", date:"2026-04-09T12:59:38.748Z", text: "Montags gibt es Studirabbat bei Ragazzi", tags: "react, mobile" },
-        { id: '2', title: 'Sonntag Padel?', author: "Caroline", date:"2026-04-11T12:59:38.748Z", text: "Möchte ein Feld für 14:00 reservieren", tags: "react, mobile" },
-        { id: '3', title: 'Mensa Westerberg', author: "Diego", date:"2026-04-12T12:59:38.748Z", text: "Isst jemand heute in der Mensa um 13:45?", tags: "react, mobile" },
-        { id: '4', title: 'Abmeldung Sonntag', author: "Angie", date:"2026-04-13T12:59:38.748Z", text: "Sorry, am Sonntag werde ich nicht dabei sein können", tags: "react, mobile" },
-      ];
+
+
 
 
 
 //REST METHODS
 
+//POST 200, login user
+app.post('/login', async (req,res)=>{
+  let email = req.body.email;
+  let password = req.body.password;
+
+   if (!email || !password ) {
+    return res.status(400).json({
+      message: "Email and password are obligatory"
+    });
+  }
+
+  try{
+    //search user
+    const user = await prisma.user.findUnique({
+      where: { email }
+    });
+
+    if (!user) {
+      return res.status(401).json({
+        message: "User not found"
+      });
+    }
+
+    //compare password
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if(!isPasswordValid){
+      return res.status(401).json({
+        message:"Password or username invalid"
+      })
+    }
+
+    const token = jwt.sign(
+      { id: user.id, email: user.email },
+      SECRET,
+      { expiresIn: "1h" }
+    );
+    //successful login
+    res.status(200).json({
+      message: "Successful login",
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email
+      },
+      token
+    }); 
+
+
+  } catch(error){
+    console.error(error);
+  }
+  
+});
+
+//POST 201, register user
+app.post('/register',async (req,res)=>{
+  let name = req.body.name;
+  let email = req.body.email;
+  let password = req.body.password
+  
+
+  if (!email || !password || !name) {
+    return res.status(400).json({
+      message: "All fields are obligatory"
+    });
+  }
+
+
+  try {
+    //check if user already exists
+    const existingUser = await prisma.user.findUnique({
+      where: { email }
+    });
+
+    if (existingUser) {
+      return res.status(400).json({
+        message: "User already exists!"
+      });
+    }
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const newUser = await prisma.user.create({
+      data: {
+        name,
+        email,
+        password:hashedPassword
+      }
+    });
+
+    res.status(201).json({
+      message: "User crated succesfully",
+      user: newUser
+    });
+
+  }catch(error){
+    console.error(error);
+    res.status(500).json({
+      message: "Server Error"
+    });
+
+  }
+
+});
+
+
 //GET 200, obtain posts
 app.get('/posts', async (req, res) =>{
-  const posts = await prisma.post.findMany();
+  const posts = await prisma.post.findMany({
+      include: {
+        author: true, //important
+      },
+    });
   return res.json(posts);
 });
 
@@ -53,11 +164,13 @@ app.get('/posts/:id', async (req, res)=>{
 });
 
 //POST 201 create a new post
-app.post('/posts', async (req, res)=>{
+app.post('/posts', authMiddleware, async (req, res)=>{
   //req.body is the whole post
+  //validieren check that data is not empty
+  //do not send author !!! hackers can use it
   const title = req.body.title;
-  const author = req.body.author;
-  const date =  new Date().toISOString();
+ //const authorId = req.body.authorId;
+  //const date =  new Date().toISOString();
   const text = req.body.text;
   const tags = req.body.tags
 
@@ -65,10 +178,9 @@ app.post('/posts', async (req, res)=>{
     const newPost = await prisma.post.create({
       data: {
         title,
-        author,
         text,
         tags,
-        date
+        authorId: (req as any).user.id //req.user.id, // comes from token
       },
       
     });
@@ -80,9 +192,6 @@ app.post('/posts', async (req, res)=>{
     return res.status(500).json({ message: 'Error creating post' });
   }
 
-  
-
-  
 
 });
 
@@ -112,9 +221,6 @@ app.patch('/posts/:id', async(req, res)=>{
 
   }
   catch(error){
-    // if (error.code === 'P2025') {
-    //   return res.status(404).json({ message: 'Post not found' });
-    // }
 
     console.error(error);
     return res.status(500).json({ message: 'Error updating post' });

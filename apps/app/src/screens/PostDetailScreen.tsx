@@ -1,9 +1,12 @@
 import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import { deletePost } from '../api/client';
-
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useEffect, useState } from "react";
 
 export default function PostDetailScreen({ navigation, route }) {
+  const [user, setUser] = useState<any>(null);
   const { post } = route.params;
+  console.log("POST DETAIL:", post);
   const handleDelete = () => {
     Alert.alert(
         "Delete Post",
@@ -24,6 +27,18 @@ export default function PostDetailScreen({ navigation, route }) {
         },
         ]
     );};
+    //loads user to decide wheter to show delete and edit buttons
+    useEffect(() => {
+      const loadUser = async () => {
+        const userString = await AsyncStorage.getItem("user");
+        if (userString) {
+          setUser(JSON.parse(userString));
+        }
+      };
+
+      loadUser();
+    }, []);
+    const isOwner = user?.id === post.author?.id;
 
     //ISO DATE to dd/mm/yyyy
     const formatDate = (dateString) => {
@@ -43,7 +58,7 @@ export default function PostDetailScreen({ navigation, route }) {
 
       {/* Meta */}
       <Text style={styles.meta}>
-        {post.author} · {formatDate(post.date)}
+        {post.author.name} · {formatDate(post.date)}
       </Text>
 
       {/* Tags */}
@@ -53,15 +68,23 @@ export default function PostDetailScreen({ navigation, route }) {
       <Text style={styles.body}>{post.text || 'No content'}</Text>
 
       {/* Buttons */}
-      <View style={styles.buttonContainer}>
-        <TouchableOpacity style={styles.editButton} onPress={() => navigation.navigate('EditPost',{ post }) }>
-          <Text style={styles.buttonText}>Edit</Text>
-        </TouchableOpacity>
+      {isOwner && (
+        <View style={styles.buttonContainer}>
+          <TouchableOpacity
+            style={styles.editButton}
+            onPress={() => navigation.navigate('EditPost', { post })}
+          >
+            <Text style={styles.buttonText}>Edit</Text>
+          </TouchableOpacity>
 
-        <TouchableOpacity style={styles.deleteButton} onPress={handleDelete}>
-          <Text style={styles.buttonText}>Delete</Text>
-        </TouchableOpacity>
-      </View>
+          <TouchableOpacity
+            style={styles.deleteButton}
+            onPress={handleDelete}
+          >
+            <Text style={styles.buttonText}>Delete</Text>
+          </TouchableOpacity>
+        </View>
+      )}
 
     </View>
   );

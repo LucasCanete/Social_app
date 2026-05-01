@@ -1,24 +1,51 @@
-import { View, Text, TextInput, StyleSheet, Button, TouchableOpacity} from 'react-native';
-import { useState } from 'react';
+import { View, Text, TextInput, StyleSheet, Button, TouchableOpacity,Alert} from 'react-native';
+import { useState, useEffect } from 'react';
 import { createPost, updatePost } from '../api/client';
+
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 
 
 export default function NewPostScreen({route,navigation}) {
   const post = route.params?.post;
 
+  //detect changes that affect UI
   const [title, setTitle] = useState(post?.title || '');
   const [author, setAuthor] = useState(post?.author || '');
   const [text, setText] = useState(post?.text || '');
   const [tags, setTags] = useState(post?.tags || '');
+  const [user, setUser] = useState<any>(null);
+
+  //load user when entering page
+  useEffect(() => {
+    const loadUser = async () => {
+      const userString = await AsyncStorage.getItem("user");
+
+      if (userString) {
+        console.log("RAW STORAGE:", userString);
+        setUser(JSON.parse(userString));
+        
+      }
+    };
+
+    loadUser();
+  }, []);
+
 
 
   const handleSubmit = async () =>{
+    if (!user) {
+      Alert.alert("Error", "User not loaded");
+      console.log("User not loaded");
+      return;
+    }
+    console.log("User posting:", user.name)
+    console.log("User id:", user.id)
   const data = {
     title,
-    author,
     text,
     tags,
+    authorId:Number(user.id)
   };
   try {
       if (post){
@@ -33,6 +60,7 @@ export default function NewPostScreen({route,navigation}) {
       } else {
         await createPost(data);
         console.log("Post Created")
+        console.log("POST DATA:", data);
         navigation.goBack();
       }
       
@@ -49,7 +77,9 @@ export default function NewPostScreen({route,navigation}) {
       <TextInput style={styles.input} value={title} onChangeText={setTitle} />
 
       <Text style={styles.label}>Author</Text>
-      <TextInput style={styles.input} value={author} onChangeText={setAuthor} />
+      <Text>
+        {author?.name || user?.name || "Loading..."}
+      </Text>
 
       <Text style={styles.label}>Text</Text>
       <TextInput 

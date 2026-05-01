@@ -43,10 +43,24 @@ In case node -v returns version 14 change to version 20 with:
 nvm use 20
 ```
 To open the android emulator onces the project is running press a
+## Database
+The database model is define inside packages/db/prisma/schema.prisma. After making any changes to this file run this code inside the prisma dir to apply the new changes to the model.
+```
+npx prisma migrate dev --name update_schema
+npx prisma generate
+```
+
+Delete already present model with
+```
+npx prisma migrate reset
+```
+
 # Project Status
 - [x] Lab 1: Prepare the project and install all requirements
 - [x] Lab 2: Prepare the Frontend with homescreen, new post creation, edits, etc.
-
+- [x] Lab 3: Create and delete posts with mock data
+- [x] Lab 4: Use prisma for database
+- [ ] Lab 5: User authentication
 
 ## Pictures
 

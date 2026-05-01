@@ -1,17 +1,13 @@
 import { StatusBar } from 'expo-status-bar';
 import { View, Text, FlatList, TouchableOpacity, StyleSheet } from 'react-native';
-import { useEffect, useState, useCallback  } from 'react';
+import { useEffect, useState, useCallback,useLayoutEffect  } from 'react';
 import { getPosts } from '../api/client';
 import { useFocusEffect } from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 
-export default function HomeScreen({ navigation }) {
-    // const posts = [
-    //     { id: '1', content: 'Essen heute Abend', author: "Lucas", date:"26/03/2026", body: "Montags gibt es Studirabbat bei Ragazzi", tags: "react, mobile" },
-    //     { id: '2', content: 'Sonntag Padel?', author: "Caroline", date:"25/03/2026", body: "Möchte ein Feld für 14:00 reservieren", tags: "react, mobile" },
-    //     { id: '3', content: 'Mensa Westerberg', author: "Diego", date:"24/03/2026", body: "Isst jemand heute in der Mensa um 13:45?", tags: "react, mobile" },
-    //     { id: '4', content: 'Abmeldung Sonntag', author: "Angie", date:"22/03/2026", body: "Sorry, am Sonntag werde ich nicht dabei sein können", tags: "react, mobile" },
-    // ];
+export default function HomeScreen({ navigation, setUser }) {
+   
 
     //states for dynamically changing the screen
     const [posts, setPosts] = useState([]);
@@ -32,7 +28,7 @@ export default function HomeScreen({ navigation }) {
         try {
             const data = await getPosts();
             //console.warn("DATA:", data);;
-            //console.log(data);
+            console.log(data);
             setPosts(data);
         } catch (error) {
             console.log("Error loading posts:", error);
@@ -41,6 +37,32 @@ export default function HomeScreen({ navigation }) {
         }
     };
 
+    const logOut = async()=>{
+        try{
+            await AsyncStorage.removeItem("user");
+            await AsyncStorage.removeItem("token"); 
+            console.log("User succesfully logout");
+            setUser(null);
+            //navigation.navigate("Log In"); Not necessary SetUser(null)automatically takes me to login
+        } 
+        catch(error){
+            console.error("Error logging out user");
+        }
+    };
+
+      //log out on right corner
+    useLayoutEffect(() => {
+    navigation.setOptions({
+        headerRight: () => (
+        <TouchableOpacity onPress={logOut} style={{ marginRight: 15 }}>
+            <Text style={{ color: "white", fontWeight: "bold" }}>
+            Logout
+            </Text>
+        </TouchableOpacity>
+        ),
+    });
+    }, [navigation]);
+
     if (loading) {
         return (
             <View style={styles.container}>
@@ -48,6 +70,8 @@ export default function HomeScreen({ navigation }) {
             </View>
         );
     }
+
+  
 
     //ISO DATE to dd/mm/yyyy
     const formatDate = (dateString) => {
@@ -76,13 +100,14 @@ export default function HomeScreen({ navigation }) {
                     >
                         <View style={styles.item}>
                         <Text>{item.title}</Text>
-                        <Text style={styles.metaText}>{item.author} · {formatDate(item.date)}</Text>
+                        <Text style={styles.metaText}>{item.author?.name || item.author?.email} · {formatDate(item.date)}</Text>
                         </View>
                     </TouchableOpacity>
                 )}
             />
         
             <StatusBar style="auto" />
+
             {/*Floating Button */}
             <TouchableOpacity 
                 style={styles.fab} 

@@ -11,14 +11,17 @@ model User {
   id        Int      @id @default(autoincrement())
   name      String ?
   email     String   @unique
+  password  String
   createdAt DateTime @default(now())
+  posts Post[]
 }
 
 model Post {
-  id      Int      @id @default(autoincrement())
-  title   String
-  author  String   
-  date    DateTime @default(now())
-  text    String ?
-  tags    String
+  id       Int      @id @default(autoincrement())
+  title    String
+  author   User @relation(fields:[authorId],references:[id])
+  authorId Int   
+  date     DateTime @default(now())
+  text     String ?
+  tags     String
 }
