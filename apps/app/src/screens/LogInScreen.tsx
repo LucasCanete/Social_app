@@ -45,7 +45,7 @@ export default function LogInScreen({route, navigation, setUser }) {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Iniciar Sesión</Text>
+      <Text style={styles.title}>Log In</Text>
 
       <TextInput
         style={styles.input}
@@ -64,7 +64,7 @@ export default function LogInScreen({route, navigation, setUser }) {
       />
 
       <TouchableOpacity style={styles.button} onPress={handleLogin}>
-        <Text style={styles.buttonText}>Entrar</Text>
+        <Text style={styles.buttonText}>Enter</Text>
       </TouchableOpacity>
 
       <TouchableOpacity onPress={() => navigation.navigate("Register")}>

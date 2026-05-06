@@ -1,8 +1,8 @@
 
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-const BASE_URL = "http://192.168.178.23:3000"; //Home
-//const BASE_URL = "http://172.22.114.208:3000"; //Uni
+//const BASE_URL = "http://192.168.178.23:3000"; //Home
+const BASE_URL = "http://172.22.116.28:3000"; //Uni
 //const BASE_URL = "http://192.168.0.5:3000"; // Caro
 
 

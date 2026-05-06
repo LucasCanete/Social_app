@@ -60,7 +60,7 @@ npx prisma migrate reset
 - [x] Lab 2: Prepare the Frontend with homescreen, new post creation, edits, etc.
 - [x] Lab 3: Create and delete posts with mock data
 - [x] Lab 4: Use prisma for database
-- [ ] Lab 5: User authentication
+- [x] Lab 5: User authentication
 
 ## Pictures
 
